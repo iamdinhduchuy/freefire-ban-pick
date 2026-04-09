@@ -19,7 +19,7 @@ const features = [
 
 const realtimeSignals = [
   {
-    label: "Ingest Latency",
+    label: "Độ trễ cập nhật",
     value: "84ms",
     icon: (
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
@@ -30,8 +30,8 @@ const realtimeSignals = [
     ),
   },
   {
-    label: "Data Throughput",
-    value: "2.1K evt/s",
+    label: "Sự kiện trận đấu",
+    value: "3261",
     icon: (
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
         <circle cx="12" cy="12" r="2" fill="currentColor" />
@@ -41,8 +41,8 @@ const realtimeSignals = [
     ),
   },
   {
-    label: "Forecast Confidence",
-    value: "94.2%",
+    label: "Trận đấu diễn ra",
+    value: "+9K Trận",
     icon: (
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" aria-hidden="true">
         <path d="M4 16h4l2-8 3 12 2-6h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -93,7 +93,7 @@ export default function Home() {
 
           <div className="space-y-5">
             <h1 className="max-w-3xl text-4xl leading-tight font-semibold text-(--text-strong) md:text-6xl md:leading-[1.1]">
-              Nâng cấp Ban/Pick thành hệ thống Analytics theo thời gian thực.
+              Hỗ trợ giải đấu tính năng BanPick cho FreeFire. Broadcast template xịn xò!
             </h1>
             <p className="max-w-2xl text-base leading-8 text-(--text-muted) md:text-xl">
               Biến dữ liệu draft thành insight hành động được ngay, từ cảnh báo sớm đến dự báo đội hình
@@ -132,8 +132,10 @@ export default function Home() {
           </ul>
         </div>
 
-        <div className="relative">
-          <CosmicGlobe analyticsPins={analyticsPins} />
+        <div className="relative w-full h-full">
+          <div className="absolute w-full h-full left-[50%] -translate-x-1/2 flex items-center justify-center">
+            <CosmicGlobe analyticsPins={analyticsPins} />
+          </div>
         </div>
       </section>
 

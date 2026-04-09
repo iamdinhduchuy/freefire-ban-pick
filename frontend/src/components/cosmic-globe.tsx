@@ -64,7 +64,7 @@ export default function CosmicGlobe({ analyticsPins }: CosmicGlobeProps) {
   }, []);
 
   return (
-    <div className="relative mx-auto w-full max-w-150 overflow-hidden">
+    <div className="relative mx-auto w-full max-w-150">
       <div className="pointer-events-none absolute inset-10 z-0 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.3)_0%,rgba(59,130,246,0.08)_42%,rgba(2,6,23,0)_72%)] blur-2xl" />
 
       {analyticsPins.map((pin) => (
@@ -85,7 +85,7 @@ export default function CosmicGlobe({ analyticsPins }: CosmicGlobeProps) {
 
       <canvas
         ref={canvasRef}
-        className="relative z-10 h-auto w-full rounded-full border border-blue-200/25 bg-transparent shadow-[0_0_42px_rgba(96,165,250,0.28)]"
+        className="relative z-10 h-auto w-[90%] rounded-full border border-blue-200/25 bg-transparent shadow-[0_0_42px_rgba(96,165,250,0.28)]"
         aria-label="Interactive globe"
       />
     </div>
