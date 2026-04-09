@@ -1,4 +1,7 @@
-# FreeFire Ban Pick System
+# 📝 FreeFire Ban Pick System
+<div align="center">
+  <p><i>Hệ thống quản lý ban/pick cho Free Fire tích hợp Redis và Docker</i></p>
+</div>
 
 ![Ảnh minh họa dự án](docs/images/homepage_capture.png)
 
