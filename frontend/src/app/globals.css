@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #3b82f6;
+  --color-primary-hover: #5f98f7;
+  --color-secondary: #8b5cf6;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+
+  --surface-base: #050813;
+  --surface-elevated: #0b1224;
+  --surface-card: linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.62));
+  --surface-glass: rgba(59, 130, 246, 0.1);
+
+  --text-strong: #f8fafc;
+  --text-muted: #bac7de;
+  --focus-ring: #93c5fd;
+
+  --background: var(--surface-base);
+  --foreground: var(--text-strong);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-GFF);
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--surface-base);
+    --foreground: var(--text-strong);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-GFF), "Audiowide", "Segoe UI", sans-serif;
+  background-image: linear-gradient(180deg, #03050d 0%, #060b17 100%);
+  letter-spacing: 0.01em;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
