@@ -23,7 +23,7 @@ export function requireAdmin(request: Request, response: Response, next: NextFun
     const token = getBearerToken(request);
 
     if (!token) {
-      return response.status(401).json({ message: "Thiếu JWT hợp lệ" });
+      return response.status(401).json({ message: "Token không hợp lệ" });
     }
 
     const payload = jwt.verify(token, getJwtSecret()) as JwtUserPayload;
@@ -34,6 +34,6 @@ export function requireAdmin(request: Request, response: Response, next: NextFun
 
     return next();
   } catch {
-    return response.status(401).json({ message: "JWT không hợp lệ hoặc đã hết hiệu lực" });
+    return response.status(401).json({ message: "Token không hợp lệ hoặc đã hết hiệu lực" });
   }
 }

@@ -3,6 +3,7 @@ import express from "express";
 import morgan from "morgan";
 import { authRoutes } from "./routes/authRoutes.ts";
 import { userRoutes } from "./routes/userRoutes.ts";
+import { roomRoutes } from "./routes/roomRoutes.ts";
 
 export const app = express();
 
@@ -16,3 +17,4 @@ app.get("/health", (_request, response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/rooms", roomRoutes);

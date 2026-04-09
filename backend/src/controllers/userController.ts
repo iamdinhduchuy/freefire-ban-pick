@@ -1,25 +1,33 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 import { User } from "../models/User.ts";
 import { getJwtSecret } from "../config/jwt.ts";
 import jwt from "jsonwebtoken";
 import { JwtUserPayload } from "../middleware/requireAdmin.ts";
 
+const createUserBodySchema = z.object({
+  name: z.string().trim().min(1, "name là bắt buộc"),
+  email: z.string().trim().email("email không hợp lệ"),
+  password: z.string().min(1, "password là bắt buộc"),
+});
+
+const userIdParamsSchema = z.object({
+  id: z.coerce.number().int("id phải là số nguyên").positive("id không hợp lệ"),
+});
+
 export async function createUser(request: Request, response: Response) {
   try {
-    const { name, email, password } = request.body as {
-      name?: string;
-      email?: string;
-      password?: string;
-    };
+    const parsedBody = createUserBodySchema.safeParse(request.body);
 
-    if (!name || !email) {
-      return response.status(400).json({ message: "name và email là bắt buộc" });
+    if (!parsedBody.success) {
+      return response.status(400).json({
+        message: "Dữ liệu đầu vào không hợp lệ",
+        errors: parsedBody.error.flatten().fieldErrors,
+      });
     }
 
-    if (!password) {
-      return response.status(400).json({ message: "password là bắt buộc" });
-    }
+    const { name, email, password } = parsedBody.data;
 
     const exist = await User.findOne({ where: { email } });
 
@@ -58,11 +66,16 @@ export async function getUsers(_request: Request, response: Response) {
 
 export async function getUserById(request: Request, response: Response) {
   try {
-    const userId = Number(request.params.id);
+    const parsedParams = userIdParamsSchema.safeParse(request.params);
 
-    if (Number.isNaN(userId)) {
-      return response.status(400).json({ message: "id không hợp lệ" });
+    if (!parsedParams.success) {
+      return response.status(400).json({
+        message: "Dữ liệu đầu vào không hợp lệ",
+        errors: parsedParams.error.flatten().fieldErrors,
+      });
     }
+
+    const { id: userId } = parsedParams.data;
 
     const user = await User.findByPk(userId);
 

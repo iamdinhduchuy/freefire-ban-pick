@@ -1,23 +1,29 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
+import { z } from "zod";
 import { getJwtSecret } from "../config/jwt.ts";
 import { User } from "../models/User.ts";
 
-type LoginBody = {
-  email?: string;
-  password?: string;
-};
+const loginBodySchema = z.object({
+  email: z.string().trim().email("email không hợp lệ"),
+  password: z.string().min(1, "password là bắt buộc"),
+});
 
 export async function login(request: Request, response: Response) {
   try {
-    const { email, password } = request.body as LoginBody;
+    const parsedBody = loginBodySchema.safeParse(request.body);
 
-    if (!email || !password) {
-      return response.status(400).json({ message: "email và password là bắt buộc" });
+    if (!parsedBody.success) {
+      return response.status(400).json({
+        message: "Dữ liệu đầu vào không hợp lệ",
+        errors: parsedBody.error.flatten().fieldErrors,
+      });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const { email, password } = parsedBody.data;
+
+    const user = await User.findOne({ where: { email }, raw: true });
 
     if (!user) {
       return response.status(401).json({ message: "Sai email hoặc password" });
@@ -51,6 +57,7 @@ export async function login(request: Request, response: Response) {
       },
     });
   } catch (error) {
+    console.error(error);
     return response.status(500).json({ message: "Không thể đăng nhập", error });
   }
 }

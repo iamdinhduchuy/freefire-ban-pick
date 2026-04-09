@@ -29,3 +29,6 @@ backend/prisma/dev.db-journal
 
 # Agents
 .agents/
+
+# Database
+backend/database.sqlite
