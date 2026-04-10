@@ -33,7 +33,7 @@ export default function CreateRoom() {
     setError(null);
 
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const token = localStorage.getItem("token");
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/rooms`, {
         method: "POST",

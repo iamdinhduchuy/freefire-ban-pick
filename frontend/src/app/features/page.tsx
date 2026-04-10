@@ -122,7 +122,7 @@ export default function Features() {
           <p className="inline-flex items-center rounded-full border border-(--color-primary)/50 bg-(--surface-glass) px-4 py-2 text-xs uppercase tracking-[0.28em] text-(--text-muted)">
             Tính năng hệ thống
           </p>
-          <h1 className="mx-auto max-w-3xl text-4xl leading-tight font-semibold text-(--text-strong) md:text-5xl md:leading-[1.1]">
+          <h1 className="mx-auto max-w-3xl text-4xl font-semibold leading-tight text-(--text-strong) md:text-5xl md:leading-[1.1]">
             Tất cả những gì bạn cần cho một giải đấu chuyên nghiệp
           </h1>
           <p className="mx-auto max-w-2xl text-base leading-8 text-(--text-muted)">
