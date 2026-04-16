@@ -142,3 +142,55 @@ export async function createRoom(request: Request, response: Response) {
     return response.status(500).json({ message: "Không thể tạo room", error });
   }
 }
+
+export async function joinRoom(request: Request, response: Response) {
+
+  const targetTeamName = request.body.teamName;
+  const playerName = request.body.playerName;
+  const inputPassword = request.body.password || "";
+  const roomId = request.body.roomId;
+
+  if(!targetTeamName) {
+    return response.status(400).json({ message: "Vui lòng chọn đội" });
+  }
+
+  
+  if(playerName.length === 0 || playerName.length > 20) {
+    return response.status(400).json({ message: "Tên người chơi phải từ 1 đến 20 ký tự" });
+  }
+  
+  try {
+    const room = await Room.findOne({ where: { roomId } });
+
+    if(targetTeamName !== room?.teamAName && targetTeamName !== room?.teamBName) {
+      return response.status(400).json({ message: "Đội không hợp lệ" });
+    }
+    
+    if (!room) {
+      return response.status(404).json({ message: "Không tìm thấy room" });
+    }
+
+    if (room.password && room.password !== inputPassword) {
+      return response.status(403).json({ message: "Sai mật khẩu" });
+    }
+
+    const side = targetTeamName === room?.teamAName ? "teamAPlayers" : "teamBPlayers";
+
+    if (room[side].length >= room.maxPlayers / 2) {
+      return response.status(400).json({ message: `Đội ${targetTeamName} đã đủ người chơi` });
+    }
+
+    if (room.teamAPlayers.includes(playerName) || room.teamBPlayers.includes(playerName)) {
+      return response.status(400).json({ message: "Người chơi đã có trong phòng" });
+    }
+
+    room[side].push(playerName);
+
+    await room.save();
+
+    return response.json({ message: "Tham gia room thành công", data: { team: targetTeamName, playerName } });
+
+  } catch (error) {
+    return response.status(500).json({ message: "Không thể tham gia room", error });
+  }
+}
