@@ -1,12 +1,14 @@
 "use client";
 
 import GlassHeader from "@/components/glass-header";
+import { API_BASE_URL } from "@/constant/constant";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 type TeamInfo = {
   name: string;
-  logo: string;
+  logo: string | null;
 };
 
 type TeamMatchup = {
@@ -17,7 +19,7 @@ type TeamMatchup = {
 type RoomStatus = "Đang thi đấu" | "Đang chờ" | "Chưa thi đấu";
 
 type ActiveRoom = {
-  code?: string;
+  code: string;
   name: string;
   bestOf: "Best of 1" | "Best of 3" | "Best of 5" | "Best of 7" | "Best of 11";
   status: RoomStatus;
@@ -26,62 +28,7 @@ type ActiveRoom = {
   teams: TeamMatchup;
 };
 
-const activeRooms = [
-  {
-    code: "RM-1024",
-    name: "Ranked Scrim Alpha",
-    bestOf: "Best of 3",
-    status: "Đang thi đấu",
-    currentPlayers: 8,
-    maxPlayers: 10,
-    teams: {
-      teamA: { name: "Alpha Hunters", logo: "/images/CKFF-White.png" },
-      teamB: { name: "Bravo Titans", logo: "/images/CKFF-Black.png" },
-    },
-  },
-  {
-    name: "Custom Clash Prime",
-    bestOf: "Best of 5",
-    status: "Đang chờ",
-    currentPlayers: 6,
-    maxPlayers: 10,
-    teams: {
-      teamA: { name: "Nova Esports", logo: "/images/CKFF-White.png" },
-      teamB: { name: "Phoenix Unit", logo: "/images/CKFF-Black.png" },
-    },
-  },
-  {
-    code: "RM-2301",
-    name: "Tournament Bracket A",
-    bestOf: "Best of 7",
-    status: "Đang chờ",
-    currentPlayers: 10,
-    maxPlayers: 10,
-    teams: {
-      teamA: { name: "Raven Club", logo: "/images/CKFF-Black.png" },
-      teamB: { name: "Omega Force", logo: "/images/CKFF-White.png" },
-    },
-  },
-  {
-    name: "Training Lab Echo",
-    bestOf: "Best of 1",
-    status: "Chưa thi đấu",
-    currentPlayers: 0,
-    maxPlayers: 10,
-    teams: {
-      teamA: { name: "Rookies Squad", logo: "/images/CKFF-White.png" },
-      teamB: { name: "Academy Core", logo: "/images/CKFF-Black.png" },
-    },
-  },
-] satisfies ActiveRoom[];
-
 type RoomWithCode = ActiveRoom & { code: string };
-
-function createPseudoRandomCode(source: string, idx: number) {
-  const hash = Array.from(source).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  const suffix = ((hash * 97 + (idx + 1) * 131) % 9000) + 1000;
-  return `RM-${suffix}`;
-}
 
 function getRoomStatusLabel(room: ActiveRoom) {
   if (room.status === "Đang chờ" && room.currentPlayers >= room.maxPlayers) {
@@ -92,20 +39,54 @@ function getRoomStatusLabel(room: ActiveRoom) {
 }
 
 export default function Rooms() {
-  const rooms = useMemo<RoomWithCode[]>(
-    () =>
-      activeRooms.map((room, idx) => ({
-        ...room,
-        code: room.code ?? createPseudoRandomCode(room.name, idx),
-      })),
-    [],
-  );
+  const router = useRouter();
+  const [rooms, setRooms] = useState<RoomWithCode[]>([]);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/rooms/`);
+        const data = await response.json();
+
+        let rooms: ActiveRoom[] = data.data.map((room: any) => ({
+          code: room.roomId,
+          name: room.name,
+          bestOf: room.bestOf,
+          status: room.status === "waiting" ? "Đang chờ" : room.status === "playing" ? "Đang thi đấu" : "Chưa thi đấu",
+          teamAPlayers: room.teamAPlayers,
+          teamBPlayers: room.teamBPlayers,
+          currentPlayers: room.teamAPlayers.length + room.teamBPlayers.length,
+          maxPlayers: room.maxPlayers,
+          teams: {
+            teamA: {
+              name: room.teamAName,
+              logo: room.teamAImage || null,
+            },
+            teamB: {
+              name: room.teamBName,
+              logo: room.teamBImage || null,
+            },
+          },
+        }));
+
+        setRooms(rooms);
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      }
+    };
+
+    fetchRooms();
+  }, []);
+
   const [selectedRoom, setSelectedRoom] = useState<RoomWithCode | null>(null);
   const [popupType, setPopupType] = useState<"blocked" | "setup" | null>(null);
   const [gameName, setGameName] = useState("");
   const [roomSearch, setRoomSearch] = useState("");
   const [roomPassword, setRoomPassword] = useState("");
   const [representativeTeam, setRepresentativeTeam] = useState<"A" | "B">("A");
+  const [teamName, setTeamName] = useState("");
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [isJoining, setIsJoining] = useState(false);
 
   const filteredRooms = useMemo(() => {
     const keyword = roomSearch.trim().toLowerCase();
@@ -120,6 +101,49 @@ export default function Rooms() {
   const closePopup = () => {
     setSelectedRoom(null);
     setPopupType(null);
+    setJoinError(null);
+    setIsJoining(false);
+  };
+
+  const handleJoinRoom = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedRoom) {
+      setJoinError("Không tìm thấy phòng để tham gia.");
+      return;
+    }
+
+    setIsJoining(true);
+    setJoinError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/rooms/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          roomId: selectedRoom.code,
+          teamName,
+          playerName: gameName,
+          password: roomPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setJoinError(data.message ?? "Không thể tham gia phòng");
+        return;
+      }
+
+      closePopup();
+      router.replace("/");
+    } catch {
+      setJoinError("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   const handleRoomClick = (room: RoomWithCode) => {
@@ -137,6 +161,7 @@ export default function Rooms() {
       setGameName("");
       setRoomPassword("");
       setRepresentativeTeam("A");
+      setTeamName(room.teams.teamA.name);
       return;
     }
 
@@ -161,7 +186,7 @@ export default function Rooms() {
 
       <section className="mx-auto w-full max-w-7xl rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(8,14,30,0.9),rgba(17,24,39,0.55))] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] md:p-8">
         <p className="inline-flex items-center rounded-full border border-emerald-300/25 bg-emerald-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-emerald-200">
-          {activeRooms.length} phòng đang hoạt động
+          {rooms.length} phòng đang hoạt động
         </p>
         <h2 className="mt-4 max-w-3xl text-3xl leading-tight font-semibold text-(--text-strong) md:text-5xl">
           Danh sách phòng thi đấu
@@ -279,11 +304,14 @@ export default function Rooms() {
 
                 <form
                   className="mt-5 space-y-5"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    closePopup();
-                  }}
+                  onSubmit={handleJoinRoom}
                 >
+                  {joinError ? (
+                    <div className="rounded-xl border border-red-300/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                      {joinError}
+                    </div>
+                  ) : null}
+
                   <div>
                     <label htmlFor="game-name" className="mb-2 block text-sm text-(--text-muted)">
                       Tên game vào trận
@@ -307,7 +335,10 @@ export default function Rooms() {
                         type="button"
                         role="radio"
                         aria-checked={representativeTeam === "A"}
-                        onClick={() => setRepresentativeTeam("A")}
+                        onClick={() => {
+                          setRepresentativeTeam("A");
+                          setTeamName(selectedRoom.teams.teamA.name);
+                        }}
                         className={`focus-ring rounded-xl border p-3 text-left transition-colors ${
                           representativeTeam === "A"
                             ? "border-blue-300/60 bg-blue-500/15"
@@ -317,7 +348,7 @@ export default function Rooms() {
                         <p className="text-xs uppercase tracking-[0.16em] text-(--text-muted)">Đội A</p>
                         <div className="mt-2 flex items-center gap-3">
                           <Image
-                            src={selectedRoom.teams.teamA.logo}
+                            src={selectedRoom.teams.teamA.logo || "/images/CKFF-Black.png"}
                             alt={selectedRoom.teams.teamA.name}
                             width={44}
                             height={44}
@@ -331,7 +362,10 @@ export default function Rooms() {
                         type="button"
                         role="radio"
                         aria-checked={representativeTeam === "B"}
-                        onClick={() => setRepresentativeTeam("B")}
+                        onClick={() => {
+                          setRepresentativeTeam("B");
+                          setTeamName(selectedRoom.teams.teamB.name);
+                        }}
                         className={`focus-ring rounded-xl border p-3 text-left transition-colors ${
                           representativeTeam === "B"
                             ? "border-blue-300/60 bg-blue-500/15"
@@ -341,7 +375,7 @@ export default function Rooms() {
                         <p className="text-xs uppercase tracking-[0.16em] text-(--text-muted)">Đội B</p>
                         <div className="mt-2 flex items-center gap-3">
                           <Image
-                            src={selectedRoom.teams.teamB.logo}
+                            src={selectedRoom.teams.teamB.logo || "/images/CKFF-Black.png"}
                             alt={selectedRoom.teams.teamB.name}
                             width={44}
                             height={44}
@@ -382,9 +416,10 @@ export default function Rooms() {
                     </button>
                     <button
                       type="submit"
-                      className="focus-ring inline-flex h-10 items-center justify-center rounded-full bg-(--color-primary) px-5 text-sm font-medium text-white transition-colors hover:bg-(--color-primary-hover)"
+                      disabled={isJoining}
+                      className="focus-ring inline-flex h-10 items-center justify-center rounded-full bg-(--color-primary) px-5 text-sm font-medium text-white transition-colors hover:bg-(--color-primary-hover) disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Xác nhận
+                      {isJoining ? "Đang vào phòng..." : "Xác nhận"}
                     </button>
                   </div>
                 </form>

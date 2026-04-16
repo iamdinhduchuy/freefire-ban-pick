@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type HeaderAction = {
   label: string;
@@ -24,6 +27,15 @@ export default function GlassHeader({
   actions,
   className,
 }: GlassHeaderProps) {
+  const [user, setUser] = useState({ name: "", role: "" });
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   return (
     <header
       className={`mx-auto flex w-full max-w-7xl items-center justify-between rounded-2xl border border-white/15 bg-[linear-gradient(140deg,rgba(15,23,42,0.76),rgba(30,41,59,0.4))] px-4 py-3 shadow-[0_10px_36px_rgba(2,6,23,0.48)] backdrop-blur-xl md:px-6 md:py-4 ${className ?? ""}`}
@@ -39,6 +51,12 @@ export default function GlassHeader({
       </Link>
 
       <nav className="flex items-center gap-3" aria-label="Header actions">
+        {user && (
+          <span className="text-sm text-(--text-muted)">
+            Xin chào, <strong className="text-(--text-strong)">{user?.name}</strong>
+            {user?.role === "admin" ? " (Admin)" : ""}
+          </span>
+        )}
         {actions.map((action) => (
           <Link
             key={action.label}

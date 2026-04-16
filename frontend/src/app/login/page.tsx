@@ -1,6 +1,7 @@
 "use client";
 
 import GlassHeader from "@/components/glass-header";
+import { API_BASE_URL } from "@/constant/constant";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -17,7 +18,7 @@ export default function Login() {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -27,6 +28,13 @@ export default function Login() {
 
       if (!response.ok) {
         setError(data.message ?? "Đăng nhập thất bại");
+        return;
+      }
+
+      console.log(data.data);
+
+      if(data.data?.user.role !== "admin") {
+        setError("Tài khoản không có quyền truy cập");
         return;
       }
 

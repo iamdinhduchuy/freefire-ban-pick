@@ -9,7 +9,6 @@ export type RoomAttributes = {
   name: string;
   bestOf: "BO1" | "BO3" | "BO5" | "BO7" | "BO11";
   status: "waiting" | "playing" | "finished" | "canceled";
-  currentPlayers: string[]; // Danh sách username của người chơi hiện tại trong phòng
   maxPlayers: number;
   teamAName: string;
   teamBName: string;
@@ -17,6 +16,8 @@ export type RoomAttributes = {
   teamBImage: string;
   teamScoreA: number;
   teamScoreB: number;
+  teamAPlayers: string[]; // Danh sách username của người chơi team A
+  teamBPlayers: string[]; // Danh sách username của người chơi team B
   password: string;
   maxBans: number;
   expiredAt?: Date; // Thời điểm phòng hết hạn, sau thời điểm này phòng sẽ tự động bị xóa (6 tiếng sau khi tạo)
@@ -24,7 +25,7 @@ export type RoomAttributes = {
   updatedAt?: Date;
 };
 
-export type RoomCreationAttributes = Omit<RoomAttributes, "id" | "status" | "currentPlayers" | "teamScoreA" | "teamScoreB" | "expiredAt">;
+export type RoomCreationAttributes = Omit<RoomAttributes, "id" | "status" | "currentPlayers" | "teamScoreA" | "teamScoreB" | "expiredAt" | "teamAPlayers" | "teamBPlayers">;
 
 export class Room extends Model<RoomAttributes, RoomCreationAttributes> implements RoomAttributes {
   declare id: number;
@@ -32,12 +33,13 @@ export class Room extends Model<RoomAttributes, RoomCreationAttributes> implemen
   declare name: string;
   declare bestOf: "BO1" | "BO3" | "BO5" | "BO7" | "BO11";
   declare status: "waiting" | "playing" | "finished" | "canceled";
-  declare currentPlayers: string[];
   declare maxPlayers: number;
   declare teamAName: string;
   declare teamBName: string;
   declare teamAImage: string;
   declare teamBImage: string;
+  declare teamAPlayers: string[];
+  declare teamBPlayers: string[];
   declare teamScoreA: number;
   declare teamScoreB: number;
   declare password: string;
@@ -70,11 +72,6 @@ Room.init(
       type: DataTypes.ENUM("waiting", "playing", "finished", "canceled"),
       allowNull: false,
       defaultValue: "waiting",
-    },
-    currentPlayers: {
-      type: DataTypes.JSON,
-      allowNull: false,
-      defaultValue: [],
     },
     maxPlayers: {
       type: DataTypes.INTEGER,
@@ -133,6 +130,16 @@ Room.init(
       set(value) {
         throw new Error('Trường expiredAt là trường tự động, không thể gán thủ công!');
       }
+    },
+    teamAPlayers: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: [],
+    },
+    teamBPlayers: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: [],
     }
   },
   {
